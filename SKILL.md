@@ -119,7 +119,10 @@ ls -lh ~/.openclaw/agents/main/sessions/*.jsonl | sort -k5 -rh | head -1
 | 新增项目/skill | 新建条目 |
 | 发布新版本到 ClaWHub/GitHub | 更新版本号和最后更新日期 |
 | 更改 Git remote 或本地目录 | 更新对应字段 |
+| 删除项目/skill | 从索引中移除对应条目 |
 | 发现重要注意事项 | 追加到"注意"字段 |
+
+> ⚠️ **任何项目操作完成后，必须同步更新 MEMORY.md 项目索引。** 创建、删除、版本更新都算——操作完不更新索引等于没记录。
 
 ### 注意事项
 
