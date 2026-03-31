@@ -84,9 +84,27 @@ description: |
 2. 检查完毕，若无其他需要关注的事项，回复 HEARTBEAT_OK
 ```
 
-> 💡 这两个配置共同完成完整的记忆管理闭环：
+**步骤3：初始化 `memory/tasks.md`**
+
+执行以下命令创建初始文件（只需一次）：
+
+```bash
+mkdir -p ~/.openclaw/workspace/memory
+cat > ~/.openclaw/workspace/memory/tasks.md << 'EOF'
+# 任务状态
+
+## 进行中
+
+## 已完成（存档）
+EOF
+```
+
+> 此后由 AI 在合适时机自动维护，无需手动操作。
+
+> 💡 三个配置共同完成完整的记忆管理闭环：
 > - **HEARTBEAT.md**：负责每天自动创建日记文件（日记存在性保障）
 > - **AGENTS.md**：负责 session 启动时读取日记和任务状态（内容恢复）
+> - **tasks.md**：工作状态的持久化存储，安装时初始化，后续由 AI 维护
 
 ---
 
