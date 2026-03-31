@@ -7,7 +7,7 @@ description: |
   用于以下场景：记录工作进度、session 启动时恢复任务状态、创建/读取每日日记、
   更新项目索引、用户说"先这样"或"暂停"时保存状态。
   
-  安装后需将启动规则追加到 AGENTS.md（见"安装后配置"章节）。
+  安装后需将启动规则追加到 AGENTS.md，并将日记检查任务追加到 HEARTBEAT.md（见"安装后配置"章节）。
 ---
 
 # Memory Keeper
@@ -18,7 +18,7 @@ description: |
 
 ## 安装后配置（必做一次）
 
-将以下内容追加到 `~/.openclaw/workspace/AGENTS.md`：
+**步骤1：追加到 `~/.openclaw/workspace/AGENTS.md`**
 
 ```markdown
 ## 记忆管理（memory-keeper）
@@ -48,6 +48,45 @@ description: |
 新建/删除项目、发布新版本、更改 Git 地址时，读取 `skills/memory-keeper/SKILL.md`
 并按其规范更新 `MEMORY.md` 的项目索引。
 ```
+
+**步骤2：追加到 `~/.openclaw/workspace/HEARTBEAT.md`**
+
+```markdown
+## 每日日记检查
+
+每次 heartbeat 触发时执行：
+
+1. 检查今天的日记文件 `memory/YYYY-MM-DD.md` 是否存在
+   - 不存在 → 用以下模板创建（只创建一次，不重复创建）
+   - 存在 → 跳过
+
+**日记模板：**
+
+​```
+# YYYY-MM-DD
+
+## 今日工作
+- 
+
+## 重要决策
+- 
+
+## 遇到的问题
+- 
+
+## 经验教训
+- 
+
+## 待办
+- [ ] 
+​```
+
+2. 检查完毕，若无其他需要关注的事项，回复 HEARTBEAT_OK
+```
+
+> 💡 这两个配置共同完成完整的记忆管理闭环：
+> - **HEARTBEAT.md**：负责每天自动创建日记文件（日记存在性保障）
+> - **AGENTS.md**：负责 session 启动时读取日记和任务状态（内容恢复）
 
 ---
 
