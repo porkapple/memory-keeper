@@ -351,7 +351,16 @@ echo '{"lastDream": "2000-01-01", "sessionsSinceLastDream": 0}' > ~/.openclaw/wo
 
 `lastDream` 设为 `2000-01-01` 确保首次检查时距离足够远，不会因为"文件刚创建"而跳过整理。
 
-每次有工作 session 时，`sessionsSinceLastDream` +1；Dream 完成后重置为 0，更新 `lastDream` 为当天日期。
+**计数规则（每天只加一次，避免 heartbeat 多次触发导致虚高）：**
+- 今天的日记文件 `memory/YYYY-MM-DD.md` **本次 heartbeat 刚创建** → `sessionsSinceLastDream` +1
+- 今天日记已存在（非当天第一次 heartbeat）→ 不计数，跳过
+
+**Dream 完成后重置：**
+- `lastDream` 更新为当天日期（`YYYY-MM-DD`）
+- `sessionsSinceLastDream` 重置为 0
+- 写回 `dream-state.json`
+
+下次触发条件：距 `lastDream` 再过 7 天，且又积累 3 个工作日 session。
 
 ---
 
