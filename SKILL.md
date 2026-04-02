@@ -341,7 +341,17 @@ tasks.md 中有多个"进行中"任务时：
 }
 ```
 
-每次有工作 session 时，`sessionsSinceLastDream` +1；Dream 完成后重置为 0，更新 `lastDream`。
+**初始化（文件不存在时自动创建）：**
+
+每次 heartbeat 读取 `memory/dream-state.json` 时，如果文件不存在，立即创建：
+
+```bash
+echo '{"lastDream": "2000-01-01", "sessionsSinceLastDream": 0}' > ~/.openclaw/workspace/memory/dream-state.json
+```
+
+`lastDream` 设为 `2000-01-01` 确保首次检查时距离足够远，不会因为"文件刚创建"而跳过整理。
+
+每次有工作 session 时，`sessionsSinceLastDream` +1；Dream 完成后重置为 0，更新 `lastDream` 为当天日期。
 
 ---
 
