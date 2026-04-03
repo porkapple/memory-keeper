@@ -1,0 +1,98 @@
+# 🐰 memory-keeper
+
+> **好记性不如烂笔头——解决 AI `/new` 后失忆导致工作中断的问题。**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/porkapple/memory-keeper/releases)
+[![Author](https://img.shields.io/badge/author-爱兔%20aitu-orange)](https://github.com/porkapple)
+
+**核心目标：工作不因 `/new` 而中断。**
+
+你执行 `/new` 重置对话后，AI 能立刻说："上次在做「xxx」，做到「yyy」，下一步是「zzz」，要继续吗？"——不需要你重新解释背景。
+
+---
+
+## 📦 安装
+
+### 方式一：通过 OpenClaw Skill 安装（推荐）
+
+```bash
+openclaw skill install memory-keeper
+```
+
+### 方式二：手动安装
+
+```bash
+# 克隆仓库
+git clone https://github.com/porkapple/memory-keeper.git ~/.openclaw/workspace/skills/memory-keeper
+```
+
+安装后，按照 `SKILL.md` 中"安装后配置"章节的说明，完成 `AGENTS.md` 和 `HEARTBEAT.md` 的配置（必做一次）。
+
+---
+
+## 🧠 三层记忆结构
+
+| 层级 | 文件 | 内容 | 加载时机 |
+|------|------|------|----------|
+| 🔥 热层 | `memory/tasks.md` | 进行中的任务状态 | 每次 session 启动 |
+| 🌡️ 温层 | `memory/YYYY-MM-DD.md` | 最近 7 天的日记 | 每次 session 启动 |
+| 🧊 冷层 | `MEMORY.md` | 项目索引 | 提到具体项目时 |
+
+---
+
+## ✨ 核心特性
+
+- **工作状态恢复**：`tasks.md` 记录"做到哪一步"和"下一步干什么"，新 session 秒接上下文
+- **每日日记**：按主题归类，只写有价值的内容；包含"已验证的方法"和"待关注风险"两个关键章节
+- **记忆三段式**：经验教训必须写「规则 + 为什么 + 触发场景」，知道原因才能判断边界情况
+- **记对，也记错**：不只记纠正，也记用户认可的方向——只记错误会让 AI 越来越保守
+- **Dream 整理**：每 7 天自动整理记忆，修正漂移、合并重复、归档旧日记
+- **绝对时间**：所有日期强制用 `YYYY-MM-DD`，禁止"下周"、"明天"等相对表达
+
+---
+
+## 📁 文件结构
+
+安装并初始化后，工作目录结构如下：
+
+```
+~/.openclaw/workspace/
+├── MEMORY.md                    # 项目索引（冷层）
+├── memory/
+│   ├── tasks.md                 # 任务状态（热层）
+│   ├── dream-state.json         # Dream 整理状态追踪
+│   ├── 2026-04-03.md            # 每日日记（温层）
+│   ├── 2026-04-02.md
+│   └── archive/                 # 30天前的旧日记归档
+│       └── 2026-03-01.md
+└── skills/
+    └── memory-keeper/
+        └── SKILL.md
+```
+
+---
+
+## 🔄 Dream 整理机制
+
+触发条件：距上次整理超过 **7 天** 且积累了 **3 个工作日 session**。
+
+触发后执行四阶段整理：
+1. **定向**：扫描近期任务和日记，明确当前状态
+2. **收集**：找出值得长期保留的经验和方法
+3. **整合**：写入 MEMORY.md，修正漂移的旧记忆（矛盾时直接重写，不并存）
+4. **修剪**：归档 30 天前的日记，MEMORY.md 保持 200 行以内
+
+---
+
+## 📝 License
+
+[MIT License](./LICENSE)
+
+---
+
+## 👤 作者
+
+**爱兔 aitu** - 安兔兔的AI员工
+
+> "记忆不是备忘录，是决策参考。"
