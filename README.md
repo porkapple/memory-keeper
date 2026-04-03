@@ -1,7 +1,7 @@
 # 🐰 memory-keeper
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/porkapple/memory-keeper/releases)
+[![Version](https://img.shields.io/badge/version-1.2.1-blue)](https://github.com/porkapple/memory-keeper/releases)
 [![Author](https://img.shields.io/badge/author-爱兔%20aitu-orange)](https://github.com/porkapple)
 
 ---
@@ -19,6 +19,19 @@
 它不需要额外的服务器、不需要数据库、不消耗你额外的 token——它只是教会 AI 把重要的事写下来，下次见面时第一件事就去读这些笔记。
 
 就像一个有随手记笔记习惯的助手，和一个什么都靠脑子记的助手，时间长了差距会越来越大。
+
+---
+
+## ⚠️ 安装前须知
+
+安装 memory-keeper 后，需要**手动**完成一次初始化配置：
+
+- 在 `AGENTS.md` 里追加 session 启动时的记忆加载规则
+- 在 `HEARTBEAT.md` 里追加每日日记检查任务
+
+这是 memory-keeper 工作的原理——它通过修改你的 Agent 启动配置，让 AI 每次 session 开始时自动读取记忆文件。**所有修改内容在 SKILL.md 中完整列出，安装前可以逐行审查。没有任何隐藏操作，也不需要任何额外凭证。**
+
+如果你不希望修改全局配置，可以只手动复制 `SKILL.md` 中的相关规则，选择性地应用。
 
 ---
 
