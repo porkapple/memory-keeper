@@ -1,9 +1,9 @@
 ---
 name: memory-keeper
 description: |
-  Memory management skill that prevents AI amnesia after /new resets. Uses a 3-tier loading system (hot/warm/cold) to load only what's needed per session — saving tokens while retaining full context. Includes: task state recovery, daily journal (topic-grouped), project index, and Dream consolidation (auto-corrects drifted memories). No external services, pure filesystem, human-readable and auditable.
+  解决 AI /new 后失忆问题的记忆管理 skill。三层加载机制（热/温/冷），session 启动时只取当前需要的记忆，省 token。包含：任务状态恢复、每日日记、项目索引、Dream 定期整理。纯文件系统，无需外部服务。用户说"先这样"、"暂停"、"记住这个"时触发。
 
-  Use when: logging work progress, restoring session context, writing daily journal, saving state on pause. Triggers when user says "that's it for now", "pause", "remember this", or when a milestone is completed.
+  Memory management skill that prevents AI amnesia after /new resets. 3-tier loading (hot/warm/cold) loads only what's needed per session — saving tokens. Includes: task state recovery, daily journal, project index, Dream consolidation. Pure filesystem, no external services. Triggers on "pause", "remember this", milestone completion.
 author: 爱兔 aitu - AnTuTu AI Employee
 version: "1.3.0"
 ---
