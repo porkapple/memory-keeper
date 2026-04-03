@@ -1,335 +1,321 @@
 ---
 name: memory-keeper
 description: |
-  解决 AI /new 后失忆问题的记忆管理 skill。通过三层加载机制（热/温/冷），session 启动时只取当前需要的记忆，不浪费 token。包含：任务状态恢复、每日日记（按主题归类）、项目索引、Dream 定期整理（自动修正漂移记忆）。不依赖任何外部服务，纯文件系统，人类可读可审查。
+  Memory management skill that prevents AI amnesia after /new resets. Uses a 3-tier loading system (hot/warm/cold) to load only what's needed per session — saving tokens while retaining full context. Includes: task state recovery, daily journal (topic-grouped), project index, and Dream consolidation (auto-corrects drifted memories). No external services, pure filesystem, human-readable and auditable.
 
-  适用场景：记录工作进度、session 启动时恢复上下文、每日日记、暂停工作时保存状态。用户说"先这样"、"暂停"、"记住这个"时触发。
-author: 爱兔 aitu - 安兔兔的AI员工
-version: "1.2.0"
+  Use when: logging work progress, restoring session context, writing daily journal, saving state on pause. Triggers when user says "that's it for now", "pause", "remember this", or when a milestone is completed.
+author: 爱兔 aitu - AnTuTu AI Employee
+version: "1.3.0"
 ---
 
 # Memory Keeper
 
-核心目标：**用户执行 /new 后，AI 能立刻接着上次的工作继续，不需要重新解释背景。**
+**Core goal: After /new, the AI picks up exactly where you left off — no re-explaining needed.**
 
 ---
 
-## 安装后配置（必做一次）
+## Post-Install Setup (one-time)
 
-**步骤1：追加到 `~/.openclaw/workspace/AGENTS.md`**
-
-```markdown
-## 记忆管理（memory-keeper）
-
-### Session 启动时执行（三层加载）
-
-1. 读取 `memory/tasks.md`
-   - 找到状态为"进行中"的任务 → 主动说："上次在做「{任务名}」，做到「{当前状态}」，下一步是「{下一步}」。要继续吗？"
-   - 多个进行中的任务 → 列出全部，让用户选择继续哪个
-   - 无进行中任务 → 跳过
-
-2. 读取今天的日记 `memory/YYYY-MM-DD.md`
-   - 不存在 → 跳过（日记由 heartbeat 自动创建，无需在此创建）
-   - 存在 → 读取，恢复近期上下文
-
-3. 仅在用户提到某个项目时，才读取 `MEMORY.md` 中该项目的条目
-
-### 工作状态记录时机（触发即执行，不等用户提醒）
-
-以下两种情况必须立即更新 `memory/tasks.md`：
-1. 完成明确的里程碑（发布了版本、解决了 bug、完成了某个功能模块）
-2. 用户说出暂停信号："好，先这样"、"今天到这里"、"暂停"、"先放着"等
-
-> 这是唯一可靠的触发时机。不要按轮数计时，不要检测 context 大小。
-
-### 项目变更时执行
-新建/删除项目、发布新版本、更改 Git 地址时，读取 `skills/memory-keeper/SKILL.md`
-并按其规范更新 `MEMORY.md` 的项目索引。
-```
-
-**步骤2：追加到 `~/.openclaw/workspace/HEARTBEAT.md`**
+### Step 1: Append to `~/.openclaw/workspace/AGENTS.md`
 
 ```markdown
-## 每日日记检查
+## Memory Management (memory-keeper)
 
-每次 heartbeat 触发时执行：
+### Session Startup — 3-Tier Load
 
-1. 检查今天的日记文件 `memory/YYYY-MM-DD.md` 是否存在
-   - 不存在 → 用以下模板创建（只创建一次，不重复创建）
-   - 存在 → 跳过
+1. Read `memory/tasks.md` (hot tier)
+   - Found in-progress task → say: "Last time you were working on [task], at [status]. Next step: [next]. Continue?"
+   - Multiple in-progress → list all, let user choose
+   - None → skip
 
-**日记模板：**
+2. Read today's journal `memory/YYYY-MM-DD.md` + last 7 days (warm tier)
+   - Not found → skip (heartbeat creates it automatically)
+   - Found → read to restore recent context
 
+3. Read `MEMORY.md` only when user mentions a specific project (cold tier)
+
+### When to update tasks.md (trigger immediately, don't wait)
+
+Update `memory/tasks.md` when:
+1. A clear milestone is reached (version released, bug fixed, module completed)
+2. User sends a pause signal: "that's it", "pause", "let's stop here", "I'll be back", etc.
+
+> These are the only reliable triggers. Don't count turns or monitor context size.
+
+### On project changes
+When creating/deleting projects, releasing versions, or changing Git URLs:
+read `skills/memory-keeper/SKILL.md` and update the project index in `MEMORY.md`.
 ```
+
+### Step 2: Append to `~/.openclaw/workspace/HEARTBEAT.md`
+
+```markdown
+## Daily Journal Check
+
+On each heartbeat:
+
+1. Check if today's journal `memory/YYYY-MM-DD.md` exists
+   - Not found → create it using the template below (once only, never duplicate)
+   - Found → skip
+
+**Journal template:**
 # YYYY-MM-DD
 
-## 今日工作
-- 
+## Today's Work
+<!-- Group by topic, skip empty sections -->
 
-## 重要决策
-- 
+## Validated Approaches
+<!-- What worked and was approved — format: Rule / Why / Trigger -->
 
-## 遇到的问题
-- 
+## Key Decisions
+<!-- Decisions with context and reasoning -->
 
-## 经验教训
-- 
+## Watch List
+<!-- Unresolved risks, potential regressions -->
 
-## 待办
-- [ ] 
+## Lessons Learned
+<!-- Format: Rule / Why / When to apply -->
+
+2. Update Dream state: read `memory/dream-state.json`
+   - Not found → create: {"lastDream": "2000-01-01", "sessionsSinceLastDream": 0}
+   - Today's journal was just created (first heartbeat of the day) → increment sessionsSinceLastDream by 1
+   - Today's journal already existed → skip (no double-counting)
+
+3. Check Dream trigger (both conditions required):
+   - lastDream is more than 7 days ago
+   - sessionsSinceLastDream >= 3
+   → If triggered: run Part 4 Dream consolidation, then reset counter
+
+4. If nothing needs attention, reply HEARTBEAT_OK
 ```
 
-2. 检查完毕，若无其他需要关注的事项，回复 HEARTBEAT_OK
-```
-
-**步骤3：初始化 `memory/tasks.md`**
-
-执行以下命令创建初始文件（只需一次）：
+### Step 3: Initialize `memory/tasks.md`
 
 ```bash
 mkdir -p ~/.openclaw/workspace/memory
 cat > ~/.openclaw/workspace/memory/tasks.md << 'EOF'
-# 任务状态
+# Task State
 
-## 进行中
+## In Progress
 
-## 已完成（存档）
+## Completed (archive)
 EOF
 ```
 
-> 此后由 AI 在合适时机自动维护，无需手动操作。
-
-> 💡 三个配置共同完成完整的记忆管理闭环：
-> - **HEARTBEAT.md**：负责每天自动创建日记文件（日记存在性保障）
-> - **AGENTS.md**：负责 session 启动时读取日记和任务状态（内容恢复）
-> - **tasks.md**：工作状态的持久化存储，安装时初始化，后续由 AI 维护
+> The three configs form a complete memory loop:
+> - **HEARTBEAT.md**: creates journal files daily
+> - **AGENTS.md**: restores context on session start
+> - **tasks.md**: persists work state between sessions
 
 ---
 
-## Part 1：工作状态管理
+## Part 1: Task State
 
-### tasks.md 格式
+### tasks.md format
 
 ```markdown
-# 任务状态
+# Task State
 
-## 进行中
-- [ ] {任务名称}
-  - 当前状态：{一句话，说清楚做到哪一步了}
-  - 下一步：{具体操作，新 session 的 AI 读到后无需追问就能直接执行}
-  - 记录时间：{YYYY-MM-DD HH:MM}
+## In Progress
+- [ ] {task name}
+  - Status: {one sentence — what step you're on}
+  - Next: {specific action; a fresh AI reading this should be able to start without asking}
+  - Updated: {YYYY-MM-DD HH:MM}
 
-## 已完成（存档）
-- [x] {任务名称}（完成：{YYYY-MM-DD}）
+## Completed (archive)
+- [x] {task name} (done: {YYYY-MM-DD})
 ```
 
-### "下一步"的质量标准
+### Quality bar for "Next"
 
-**不合格的写法（太模糊）：**
+**Too vague (fail):**
 ```
-下一步：继续开发
-下一步：修复问题
-下一步：测试
-```
-
-**合格的写法（可直接执行）：**
-```
-下一步：运行 bash run.sh 跑一遍评测，验证 server.py 的上报字段是否正确
-下一步：打开 scripts/main.py，在第 390 行的 _upload_results 调用前加入 show_name 判断逻辑
-下一步：把 SKILL.md 的确认步骤加入 agent_name 写入说明，然后重新发布 ClaWHub 1.0.9
+Next: continue development
+Next: fix the bug
+Next: test it
 ```
 
-> **原则：** "下一步"必须包含：做什么 + 在哪里做 + 期望结果。让一个完全没有上下文的 AI 看到后能直接开始。
+**Actionable (pass):**
+```
+Next: run bash run.sh, verify server.py upload fields match expected schema
+Next: open scripts/main.py line 390, add show_name check before _upload_results call
+Next: update SKILL.md confirmation step with agent_name instructions, republish ClaWHub 1.0.9
+```
 
-### 何时更新 tasks.md
+> Rule: "Next" must include what + where + expected outcome. A context-free AI should be able to start immediately.
 
-**触发条件1：完成里程碑**
+### When to update tasks.md
 
-以下事件发生时立即执行：
-- 成功发布一个版本（ClaWHub、GitHub、生产环境）
-- 解决了一个明确的 bug（测试通过）
-- 完成了某个功能模块（可以独立使用）
-- 完成了一份文档或方案
+**Trigger 1: Milestone reached**
+- Version published (ClaWHub, GitHub, production)
+- Bug resolved (tests pass)
+- Module completed (independently usable)
+- Document or spec finished
 
-操作：
-1. 把对应任务的"当前状态"和"下一步"更新为最新
-2. 如果整个任务已完成，移到"已完成"区域并加上完成日期
+Actions:
+1. Update "Status" and "Next" for the task
+2. If fully done, move to "Completed" with date
 
-**触发条件2：用户发出暂停信号**
+**Trigger 2: Pause signal from user**
 
-暂停信号的判断（满足其中一个即触发）：
-- 明确的结束词：包含"先"、"暂停"、"结束"、"去忙"、"吃饭"、"睡觉"、"回来再说"、"明天"、"今天到这里"等
-- 连续简短确认：用户连续两条消息都是简短确认（好/行/嗯/OK/👍），且之后没有发起新的任务
-- 里程碑完成后的收尾：刚完成了一个大里程碑，说了"搞定了"、"完成了"、"发布了"之类的话
-- **当不确定时**：主动问用户："我们今天工作完成了吗？需要我记录一下工作状态吗？"
+Pause signals (any one is enough):
+- Explicit stop words: "that's it", "pause", "done for today", "I'll be back", "tomorrow", etc.
+- Two consecutive short confirmations (ok/yes/👍) with no new task following
+- Post-milestone wrap-up: "done", "shipped", "finished"
+- **When unsure**: ask — "Are we done for today? Should I save the state?"
 
-操作：
-1. **先做自检**：快速回顾本次 session 做了什么，判断有没有遗漏没有记录的内容
-   - 完成了但还没写进 tasks.md 的里程碑？
-   - 做出了但还没写进日记的重要决策？
-   - 遇到并解决了但还没记录的问题？
-2. 如有遗漏 → 补充写入对应文件
-3. 更新 tasks.md 的"下一步"为此刻最清楚的下一个具体操作
-4. 告知用户："已保存工作状态，下次 session 会从这里继续。"
+Actions:
+1. **Self-check**: review what was done this session — anything missing from tasks.md or journal?
+2. Fill in any gaps
+3. Update "Next" to the clearest next concrete action
+4. Tell user: "State saved. I'll pick up from here next session."
 
-**不触发的情况（避免误记录）：**
-- 普通对话问答（没有实质性进展）
-- 用户只是在查看文件或讨论方案（还没有执行）
+**Don't trigger for:**
+- Pure Q&A with no real progress
+- Reviewing files or discussing plans (not executing yet)
 
-### 多任务并发时的处理规则
+### Multiple in-progress tasks
 
-tasks.md 中有多个"进行中"任务时：
-- Session 启动时列出全部，让用户选择："你有 N 个进行中的任务，要继续哪个？"
-- 不要自动选择，让用户决定
-- 如果用户没有明确选择，等待用户发起话题后再对应到具体任务
-
-### MEMORY.md 和 tasks.md 的区别
-
-| | MEMORY.md（项目索引） | tasks.md（工作状态） |
-|--|--|--|
-| 记录什么 | 项目的长期信息（目录、版本、注意事项） | 当前任务的进度和下一步 |
-| 更新频率 | 里程碑后更新 | 每次有实质进展就更新 |
-| 阅读时机 | 提到某个项目时 | 每次 session 启动时 |
-| 类比 | 项目档案 | 工作便利贴 |
+- On startup: list all, ask user which to continue
+- Don't auto-select — let the user decide
+- If user doesn't choose, wait for them to bring up a topic
 
 ---
 
-## Part 2：每日日记
+## Part 2: Daily Journal
 
-### 日记模板
+### Journal template
 
 ```markdown
 # YYYY-MM-DD
 
-## 今日工作
-<!-- 按主题归类，而非时间顺序。只写有实质内容的主题，无内容的章节直接省略 -->
+## Today's Work
+<!-- Group by topic, not chronological. Skip empty sections. -->
 
-### {主题名，如"BenchClaw 客户端"、"README 重写"}
-- {做了什么，结果是什么}
+### {topic, e.g. "BenchClaw client", "README rewrite"}
+- {what was done and the result}
 
-## ✅ 已验证的方法
-<!-- 用户认可的方向、通过了的方案、没有被推翻的做法——这些同样值得记录 -->
-<!-- 只记错误会让 AI 越来越保守；记下认可，AI 才知道什么方向可以继续走 -->
-- **{方法/方向}**：{为什么有效，适用场景}
+## Validated Approaches
+<!-- Approved directions and working methods — record these too, not just mistakes -->
+<!-- Recording only corrections makes AI overly cautious -->
+- **{method/direction}**: {why it works, when to apply}
 
-## 重要决策
-<!-- 只记有背景、有理由的决策，普通操作不算 -->
-- **{决策内容}**：{为什么这么决定}
+## Key Decisions
+<!-- Only decisions with context and reasoning — skip routine operations -->
+- **{decision}**: {why this was chosen}
 
-## ⚠️ 待关注
-<!-- 还没解决的隐患、可能的回归、需要跟进的风险点 -->
-- {风险描述} → {打算怎么处理或观察}
+## Watch List
+<!-- Unresolved risks, potential regressions, things to monitor -->
+- {risk} → {how to handle or observe}
 
-## 经验教训
-- {下次遇到类似情况，应该怎么做}
+## Lessons Learned
+- {what to do differently next time}
 ```
 
-> **写作原则：**
-> - 优先写有价值的内容，空的章节直接省略，不要留空占位
-> - 今日工作按主题聚合，相关的事放在一起，比时间流水账更易读
-> - "待关注"是日记中最重要的章节——把隐患写下来，下次 session 才不会被遗忘
+> **Writing principles:**
+> - Signal over completeness — skip empty sections entirely
+> - Group by topic, not time order
+> - Watch List is the most important section — unrecorded risks become forgotten risks
 
-### 何时记录日记
+### When to write journal entries
 
-| 触发 | 记录内容 |
-|------|----------|
-| 用户做出重要决策 | 决策内容 + 理由（写入"重要决策"） |
-| 解决了一个问题 | 问题描述 + 解决方案（写入对应主题） |
-| 发现未解决的隐患 | 风险描述 + 处理方向（写入"待关注"） |
-| 用户认可了某个方案 | 方法 + 适用场景（写入"已验证的方法"） |
-| 用户没有推翻 AI 的方案 | 默认认可信号，酌情写入"已验证的方法" |
-| 用户说"记住这个" | 完整内容（放入最相关的章节） |
-| 重要配置变更 | 变更前后 + 原因（写入"重要决策"） |
+| Trigger | What to record |
+|---------|----------------|
+| User makes a key decision | Decision + reasoning (→ Key Decisions) |
+| Problem solved | Problem + solution (→ relevant topic) |
+| Unresolved risk found | Risk + plan (→ Watch List) |
+| User approves an approach | Method + context (→ Validated Approaches) |
+| AI's approach not rejected | Default approval signal — consider recording |
+| User says "remember this" | Full content (→ most relevant section) |
+| Important config changed | Before/after + reason (→ Key Decisions) |
 
-### 记忆三段式格式（适用于经验教训、已验证的方法）
-
-重要的经验和认可，必须写清三个部分：
+### 3-part memory format (for Lessons Learned and Validated Approaches)
 
 ```
-- **规则**：{做什么 / 不做什么}
-  **为什么**：{当时的理由，知道原因才能判断边界情况}
-  **触发场景**：{什么情况下适用，YYYY-MM-DD 起效}
+- **Rule**: {do / don't do X}
+  **Why**: {reasoning at the time — knowing why enables edge case judgment}
+  **When**: {what situation triggers this, effective YYYY-MM-DD}
 ```
 
-**示例（经验教训）：**
+**Example (lesson learned):**
 ```
-- **规则**：push 前必须 git ls-files 给用户审核
-  **为什么**：2026-03-25 因未审核将含个人信息的文件推到公开仓库，删库重建
-  **触发场景**：任何 git push / ClaWHub publish 操作前
-```
-
-**示例（已验证的方法）：**
-```
-- **规则**：README 不暴露评分公式和内部实现细节
-  **为什么**：用户明确要求，竞品可能利用这些信息
-  **触发场景**：编写或修改 BenchClaw 对外文档时，2026-04-02 确认
+- **Rule**: always run git ls-files and show user before pushing
+  **Why**: 2026-03-25 pushed personal data to public repo without review, had to delete and recreate
+  **When**: before any git push or ClaWHub publish
 ```
 
-> 知道"为什么"才能灵活应对边界情况；只记结论会导致机械执行。
+**Example (validated approach):**
+```
+- **Rule**: don't expose scoring formulas or internal details in public README
+  **Why**: user's explicit requirement; competitors could exploit the information
+  **When**: writing or editing any BenchClaw public-facing docs, confirmed 2026-04-02
+```
+
+> Knowing *why* enables edge case judgment. Rules without reasons get applied blindly.
 
 ---
 
-## Part 3：项目索引
+## Part 3: Project Index
 
-### 项目条目格式（写入 MEMORY.md）
+### Entry format (in MEMORY.md)
 
 ```markdown
-### {项目名称}
-- **用途**：{一句话说明这个项目是什么}
-- **本地目录**：`{绝对路径}`
-- **Git 地址**：{URL 或 "无（本地项目）"}
-- **当前版本**：{版本号}
-- **最后更新**：{YYYY-MM-DD}
-- **注意**：{下次操作前必须知道的关键事项}
+### {project name}
+- **Purpose**: {one-sentence description}
+- **Local path**: `{absolute path}`
+- **Git URL**: {URL or "local only"}
+- **Version**: {semver}
+- **Last updated**: {YYYY-MM-DD}
+- **Notes**: {critical info needed before next operation}
 ```
 
-### 必须更新项目索引的时机
+### When to update
 
-操作完立即更新，不要拖：
-- 新增或删除项目/skill → 新建或删除条目
-- 发布新版本 → 更新版本号和日期
-- 更改 Git remote 或本地目录 → 更新对应字段
+Update immediately after:
+- Project or skill added/removed → create or delete entry
+- New version released → update version and date
+- Git remote or local path changed → update the field
 
 ---
 
-## Part 4：记忆整理（Dream）
+## Part 4: Dream Consolidation
 
-> 灵感来源：Claude Code 的 AutoDream 机制——AI 定期对记忆文件做反思性回顾，修正漂移，保持记忆准确。
+> Inspired by Claude Code's AutoDream — a periodic reflective pass over memory files to fix drift and keep memories accurate.
 
-### 触发条件
+### Trigger conditions
 
-满足以下两个条件时，在 heartbeat 中执行一次 Dream 整理：
-- 距上次整理超过 7 天（记录在 `memory/dream-state.json`）
-- 期间至少有 3 个工作 session（有对应日记文件）
+Run Dream consolidation during heartbeat when both are true:
+- `lastDream` was more than 7 days ago
+- `sessionsSinceLastDream` >= 3
 
-### 四个阶段
+### Four phases
 
-**① 定向**：先快速扫描 `memory/tasks.md` 和最近 7 天的日记，搞清楚现在知道什么
+**① Orient**: scan `memory/tasks.md` and last 7 days of journals — understand current state
 
-**② 收集**：从日记中找出值得长期保留的内容：
-- 多次出现的经验教训 → 提炼后写入 `MEMORY.md`
-- 已验证且反复有效的方法 → 更新项目条目的"注意"字段
-- 已完成超过 30 天的任务 → 从 tasks.md 的"已完成"区域删除
+**② Collect**: find content worth long-term retention:
+- Repeated lessons → distill and write to `MEMORY.md`
+- Repeatedly validated methods → update "Notes" in project entries
+- Tasks completed 30+ days ago → remove from "Completed" in tasks.md
 
-**③ 整合**：
-- 把收集到的新内容写入对应文件
-- **检查记忆漂移**：如果新内容与旧记忆矛盾，直接修正旧的，不保留两条相互矛盾的记录
-- 所有相对时间（"上次"、"之前"）换成绝对日期
+**③ Integrate**:
+- Write collected content to the right files
+- **Check for memory drift**: if new content contradicts old memory, rewrite the old — don't keep both
+- Replace relative time references ("last time", "before") with absolute dates
 
-**④ 修剪**：
-- `MEMORY.md` 超过 200 行时，合并相似条目、删除过时内容，保持精简
-- 超过 30 天的日记移入 `memory/archive/`，原始内容完整保留
+**④ Prune**:
+- `MEMORY.md` over 200 lines → merge similar entries, remove outdated content
+- Journals older than 30 days → move to `memory/archive/` (full content preserved)
 
-### 漂移修正原则
+### Drift correction principle
 
-> 某条记忆写的时候是对的，但现在情况变了，这条记忆已经不准了——这叫记忆漂移。
+> A memory was accurate when written, but circumstances changed — that's memory drift.
 
-发现漂移时的处理：
-- **直接修正**：用新的准确信息替换旧的，不要两条并存
-- **标注日期**：修正后注明"更新于 YYYY-MM-DD"
-- **不堆叠**：不要在旧记忆后面追加"（更新：xxx）"——重写比追加更清晰
+When drift is found:
+- **Rewrite**: replace old with accurate info — don't keep two conflicting entries
+- **Date it**: add "updated YYYY-MM-DD" after corrections
+- **No stacking**: don't append "(update: xxx)" to old entries — rewriting is cleaner
 
-### Dream 状态文件
+### Dream state file
 
 ```json
 // memory/dream-state.json
@@ -339,33 +325,29 @@ tasks.md 中有多个"进行中"任务时：
 }
 ```
 
-**初始化（文件不存在时自动创建）：**
-
-每次 heartbeat 读取 `memory/dream-state.json` 时，如果文件不存在，立即创建：
+**Init (auto-create if missing):**
 
 ```bash
 echo '{"lastDream": "2000-01-01", "sessionsSinceLastDream": 0}' > ~/.openclaw/workspace/memory/dream-state.json
 ```
 
-`lastDream` 设为 `2000-01-01` 确保首次检查时距离足够远，不会因为"文件刚创建"而跳过整理。
+Setting `lastDream` to `2000-01-01` ensures the first check triggers consolidation immediately.
 
-**计数规则（每天只加一次，避免 heartbeat 多次触发导致虚高）：**
-- 今天的日记文件 `memory/YYYY-MM-DD.md` **本次 heartbeat 刚创建** → `sessionsSinceLastDream` +1
-- 今天日记已存在（非当天第一次 heartbeat）→ 不计数，跳过
+**Counting rule (once per day only):**
+- Today's journal was just created this heartbeat → increment `sessionsSinceLastDream`
+- Today's journal already existed → skip (prevents overcounting from multiple daily heartbeats)
 
-**Dream 完成后重置：**
-- `lastDream` 更新为当天日期（`YYYY-MM-DD`）
-- `sessionsSinceLastDream` 重置为 0
-- 写回 `dream-state.json`
-
-下次触发条件：距 `lastDream` 再过 7 天，且又积累 3 个工作日 session。
+**After Dream completes:**
+- Set `lastDream` = today (`YYYY-MM-DD`)
+- Reset `sessionsSinceLastDream` = 0
+- Write back to `dream-state.json`
 
 ---
 
-## 注意事项
+## Rules
 
-- tasks.md 和日记不要记录密钥、token 等敏感信息
-- 项目索引放在 MEMORY.md 最前面，方便新 session 快速扫描
-- **时间必须用绝对时间**：凡是写日期的地方，必须用 `YYYY-MM-DD`，禁止"下周"、"明天"、"下次"等相对表达——三个月后这类表达不仅失效，还会添乱
-- **日记按时间归档**：超过 30 天的日记移入 `memory/archive/`，原始内容完整保留；session 启动时只加载最近 7 天的日记
-- **MEMORY.md 长度控制**：保持 200 行以内；超出时由 Dream 整理阶段合并压缩，不强制截断删除
+- Never record secrets, tokens, or credentials in tasks.md or journals
+- Keep project index at the top of MEMORY.md for fast scanning
+- **Use absolute dates only**: always write `YYYY-MM-DD` — never "next week", "tomorrow", "later" — relative dates become noise after 3 months
+- **Archive journals by age**: move journals older than 30 days to `memory/archive/` (content intact); session startup loads last 7 days only
+- **MEMORY.md length**: keep under 200 lines; Dream consolidation handles trimming — never hard-truncate
