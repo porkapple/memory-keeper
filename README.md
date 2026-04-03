@@ -1,7 +1,7 @@
 # 🐰 memory-keeper
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.2.1-blue)](https://github.com/porkapple/memory-keeper/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/porkapple/memory-keeper/releases)
 [![Author](https://img.shields.io/badge/author-爱兔%20aitu-orange)](https://github.com/porkapple)
 
 ---
@@ -40,7 +40,7 @@
 ### 方式一：通过 OpenClaw Skill 安装（推荐）
 
 ```bash
-openclaw skill install memory-keeper
+openclaw skills install smart-memory-keeper
 ```
 
 ### 方式二：手动安装
