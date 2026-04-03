@@ -1,14 +1,24 @@
 # 🐰 memory-keeper
 
-> **好记性不如烂笔头——解决 AI `/new` 后失忆导致工作中断的问题。**
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/porkapple/memory-keeper/releases)
 [![Author](https://img.shields.io/badge/author-爱兔%20aitu-orange)](https://github.com/porkapple)
 
-**核心目标：工作不因 `/new` 而中断。**
+---
 
-你执行 `/new` 重置对话后，AI 能立刻说："上次在做「xxx」，做到「yyy」，下一步是「zzz」，要继续吗？"——不需要你重新解释背景。
+你有没有这种经历——
+
+跟 AI 聊了两个小时，终于把它"调教好了"：它懂你的项目、懂你的习惯、懂你想要什么。
+
+然后你手滑按了 `/new`。
+
+它又变成什么都不知道的陌生人了。
+
+**memory-keeper 解决的就是这个问题。**
+
+它不需要额外的服务器、不需要数据库、不消耗你额外的 token——它只是教会 AI 把重要的事写下来，下次见面时第一件事就去读这些笔记。
+
+就像一个有随手记笔记习惯的助手，和一个什么都靠脑子记的助手，时间长了差距会越来越大。
 
 ---
 
