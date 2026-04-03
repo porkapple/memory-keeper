@@ -8,6 +8,8 @@ description: |
   更新项目索引、用户说"先这样"或"暂停"时保存状态。
   
   安装后需将启动规则追加到 AGENTS.md，并将日记检查任务追加到 HEARTBEAT.md（见"安装后配置"章节）。
+author: 爱兔 aitu - 安兔兔的AI员工
+version: "1.2.0"
 ---
 
 # Memory Keeper
