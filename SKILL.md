@@ -5,12 +5,55 @@ description: |
 
   Memory management skill that prevents AI amnesia after /new resets. 3-tier loading (hot/warm/cold) loads only what's needed per session — saving tokens. Includes: task state recovery, daily journal, project index, Dream consolidation. Pure filesystem, no external services. Triggers on "pause", "remember this", milestone completion.
 author: 爱兔 aitu - AnTuTu AI Employee
-version: "1.3.0"
+version: "1.4.0"
 ---
 
 # Memory Keeper
 
 **Core goal: After /new, the AI picks up exactly where you left off — no re-explaining needed.**
+
+---
+
+## Part 0: First-Run Initialization
+
+**Trigger: `memory/tasks.md` exists but is empty (no in-progress tasks).**
+
+This is the "cold start" problem — the user just installed memory-keeper but has no recorded state. Don't wait for the user to explain their work. Proactively bootstrap their memory.
+
+### Steps
+
+1. **Tell the user what you're doing:**
+   > "Your tasks.md is empty. Let me scan your recent work history and build your memory from scratch — this will take a moment."
+
+2. **Read the following (in order):**
+   - `MEMORY.md` — existing project index (if any)
+   - The most recent session history via `openclaw sessions list --limit 1` then read that session's content
+
+3. **Extract and synthesize:**
+   From what you read, identify:
+   - What projects or tasks were being worked on
+   - What was the last known status of each
+   - What the logical next step would be
+
+4. **Present to the user for confirmation — never write without approval:**
+   > "Here's what I found. Does this look right?"
+   >
+   > **In Progress:**
+   > - [ ] {task name}
+   >   - Status: {current status}
+   >   - Next: {next concrete action}
+   >
+   > **Projects detected in MEMORY.md:** {list}
+   >
+   > Reply "looks good" to save, or correct anything first.
+
+5. **On user confirmation:** write the approved content to `memory/tasks.md`.
+
+6. **If nothing useful is found** (new user, no history):
+   > "I couldn't find any recent work history. What are you currently working on? Tell me and I'll set up your tasks."
+   > Then record whatever the user shares.
+
+> **Token note:** This step reads 1 session + MEMORY.md. One-time cost at setup — worth it to have a useful memory from day one.
 
 ---
 
@@ -173,6 +216,23 @@ Actions:
 **Don't trigger for:**
 - Pure Q&A with no real progress
 - Reviewing files or discussing plans (not executing yet)
+
+### Where does it go? (The 3-file rule)
+
+This is the most common source of confusion. Use this as your decision guide:
+
+| Question | File | Example |
+|----------|------|---------|
+| "What am I working on right now?" | `tasks.md` | "BenchClaw v1.0 — waiting for test results" |
+| "What projects exist and where are they?" | `MEMORY.md` | "benchclaw-client: ~/.openclaw/workspace/skills/benchclaw-client, v1.0.0" |
+| "What happened today / this week?" | `memory/YYYY-MM-DD.md` | "Rewrote README, pushed to GitHub, fixed unicode warning" |
+
+**Simple rule:**
+- tasks.md = **sticky note on your desk** ("don't forget, next step is X")
+- MEMORY.md = **filing cabinet** ("where is the BenchClaw repo again?")
+- Daily journal = **notebook** ("what did I actually do today?")
+
+> When in doubt: if it's about progress or next action → tasks.md. If it's reference info you'll look up later → MEMORY.md. If it's a record of what happened → journal.
 
 ### Multiple in-progress tasks
 
