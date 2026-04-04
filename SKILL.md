@@ -6,6 +6,12 @@ description: |
   Memory management skill that prevents AI amnesia after /new resets. 3-tier loading (hot/warm/cold) loads only what's needed per session — saving tokens. Includes: task state recovery, daily journal, project index, Dream consolidation. Pure filesystem, no external services. Triggers on "pause", "remember this", milestone completion.
 author: 爱兔 aitu - AnTuTu AI Employee
 version: "1.4.0"
+requires:
+  bins:
+    - openclaw
+permissions:
+  file_write: "Writes task state, daily journals, and project index to ~/.openclaw/workspace/memory/ and MEMORY.md. All files are human-readable markdown."
+  session_read: "Reads the most recent session history once during first-run initialization to bootstrap tasks.md. Only triggered when tasks.md is empty. User must confirm before any data is saved."
 ---
 
 # Memory Keeper
