@@ -1,4 +1,4 @@
-# 🐰 memory-keeper
+# 🐰 smart memory-keeper
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/porkapple/memory-keeper/releases)
@@ -14,7 +14,7 @@
 
 它又变成什么都不知道的陌生人了。
 
-**memory-keeper 解决的就是这个问题。**
+**smart memory-keeper 解决的就是这个问题。**
 
 它不需要额外的服务器、不需要数据库、不消耗你额外的 token——它只是教会 AI 把重要的事写下来，下次见面时第一件事就去读这些笔记。
 
