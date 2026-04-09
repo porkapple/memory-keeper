@@ -65,11 +65,31 @@ Update immediately after: project added/removed, version released, Git remote/pa
 
 ## Part 4: Dream Consolidation
 
-See `references/dream-guide.md` for full details: four phases, drift correction, state file management.
+### Version check (every heartbeat)
 
-**Trigger (during heartbeat, both required):**
+```
+openclaw --version
+```
+
+Parse version as `YYYY.M.R`:
+- **>= 2026.4.8**: OpenClaw has native Dreaming — use it instead
+  - Check if native Dream is enabled: look for `plugins.entries.memory-core.config.dreaming.enabled: true` in openclaw.json, or run `openclaw memory promote --dry-run` (exit 0 = active)
+  - **Already enabled** → skip our Part 4 entirely, no message
+  - **Not enabled**:
+    - Check for upgrade from old version: `memory/dream-state.json` exists AND `lastDream != "2000-01-01"`
+    - **Upgrade detected** → tell user: "检测到你升级到了 2026.4.8+，建议开启原生 Dreaming（`/dreaming on`）。开启后旧 Dream 状态文件会自动清理。"
+    - **Fresh install (no upgrade)** → tell user once: "OpenClaw v2026.4.8+ has built-in Dreaming. You can enable it with `/dreaming on` in any session."
+    - After user enables native Dreaming → delete `memory/dream-state.json`
+  - Then skip our Part 4
+- **< 2026.4.8**: use our built-in Dream consolidation (see `references/dream-guide.md`)
+
+### Trigger conditions (only for < 2026.4.8)
+
+Run during heartbeat when both are true:
 - `lastDream` > 7 days ago
 - `sessionsSinceLastDream` >= 3
+
+For full details — four phases, drift correction, state file — see `references/dream-guide.md`.
 
 ## Rules
 

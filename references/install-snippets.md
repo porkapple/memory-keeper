@@ -60,17 +60,28 @@ On each heartbeat:
 ## Lessons Learned
 <!-- Format: Rule / Why / When to apply -->
 
-2. Update Dream state: read `memory/dream-state.json`
+2. **Dream consolidation (version-aware):**
+   - Run `openclaw --version` and parse as YYYY.M.R
+   - **>= 2026.4.8**: check if native Dreaming is enabled (openclaw.json → plugins.entries.memory-core.config.dreaming.enabled)
+     - Enabled → skip all Dream logic below
+     - Not enabled → check `memory/dream-state.json`:
+       - Exists AND `lastDream != "2000-01-01"` (upgrade from old version) → notify: "检测到你升级到了 2026.4.8+，建议开启原生 Dreaming（`/dreaming on`）。开启后旧 Dream 状态文件会自动清理。"
+       - Otherwise (fresh install) → notify once: "建议开启原生 Dreaming，在任意 session 中发送 /dreaming on 即可。"
+       - After user enables native Dreaming → delete `memory/dream-state.json`
+     - Then skip all Dream logic below
+   - **< 2026.4.8**: continue with steps 2a-2d below
+
+   2a. Update Dream state: read `memory/dream-state.json`
    - Not found → create: {"lastDream": "2000-01-01", "sessionsSinceLastDream": 0}
    - Today's journal was just created (first heartbeat of the day) → increment sessionsSinceLastDream by 1
    - Today's journal already existed → skip (no double-counting)
 
-3. Check Dream trigger (both conditions required):
+   2b. Check Dream trigger (both conditions required):
    - lastDream is more than 7 days ago
    - sessionsSinceLastDream >= 3
-   → If triggered: run Part 4 Dream consolidation, then reset counter
+   → If triggered: run Dream consolidation (see skills/memory-keeper/SKILL.md Part 4), then reset counter
 
-4. If nothing needs attention, reply HEARTBEAT_OK
+3. If nothing needs attention, reply HEARTBEAT_OK
 ```
 
 ## Initialize memory/tasks.md

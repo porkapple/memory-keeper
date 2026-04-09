@@ -1,4 +1,7 @@
-# Dream Consolidation — 定期记忆整理
+# Dream Consolidation — 定期记忆整理（< OpenClaw 2026.4.8）
+
+> **Note**: OpenClaw 2026.4.8+ has native Dreaming (`/dreaming on`). This guide is only for older versions.
+> See SKILL.md Part 4 for version-aware logic.
 
 > Inspired by Claude Code's AutoDream — a periodic reflective pass over memory files to fix drift and keep memories accurate.
 
