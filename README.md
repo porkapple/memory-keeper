@@ -91,7 +91,11 @@ git clone https://github.com/porkapple/memory-keeper.git ~/.openclaw/workspace/s
 │       └── 2026-03-01.md
 └── skills/
     └── memory-keeper/
-        └── SKILL.md
+        ├── SKILL.md                  # 核心流程与触发规则
+        └── references/
+            ├── formats.md            # tasks.md / 日记 / MEMORY.md 格式规范
+            ├── dream-guide.md        # Dream 整理四阶段详解
+            └── install-snippets.md   # AGENTS.md / HEARTBEAT.md 待追加内容
 ```
 
 ---
